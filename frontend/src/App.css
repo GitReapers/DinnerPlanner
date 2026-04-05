@@ -1,0 +1,484 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Eagle+Lake&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Sedan:ital@0;1&family=UnifrakturMaguntia&display=swap');
+
+@import "tailwindcss";
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cream: #f5f2eb;
+  --cream-dark: #ede9df;
+  --cream-darker: #ddd8cc;
+  --shelf: #e8e3d8;
+  --shelf-border: #d4cfc4;
+  --text: #2c2824;
+  --text-muted: #8a8278;
+  --green: #4a7c59;
+  --green-light: #e8f0eb;
+  --green-dark: #345a40;
+  --red: #c0392b;
+  --red-light: #fdf0ee;
+  --gold: #c9922a;
+  --fridge-bg: #edeae2;
+  --fridge-border: #ccc8be;
+  --radius: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--cream);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  height: 56px;
+  background: var(--cream);
+  border-bottom: 1px solid var(--cream-darker);
+}
+
+.app-logo {
+  font-size: 30px;
+  font-weight: 500;
+  color: var(--text);
+  letter-spacing: -0.02em;
+}
+
+.app-nav { display: flex; gap: 4px; }
+
+.nav-link {
+  background: none;
+  border: none;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.nav-link:hover { background: var(--cream-dark); color: var(--text); }
+.nav-link.active { background: var(--text); color: var(--cream); }
+
+/* ── Layout ── */
+.app-main {
+  display: flex;
+  gap: 32px;
+  padding: 28px 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: flex-start;
+}
+
+.app-main {
+  display: flex;
+  flex-direction: row;
+  gap: 32px;
+  padding: 28px 2rem;
+}
+
+
+
+.left-panel {
+  width: 600px;   
+  flex-shrink: 0;  /* prevents it from squishing */
+}
+
+.right-panel {
+  flex: 0.5;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+/* ── Fridge wrapper — overflow visible so doors escape ── */
+.fridge-wrap {
+  position: relative;
+  width: 100%;
+  /* extra right padding gives doors room to swing out without causing scroll */
+  padding-right: 180px;
+}
+
+/* ── Fridge body — no overflow hidden ── */
+.fridge {
+  width: 300px; 
+  background: var(--fridge-bg);
+  border: 1.5px solid var(--fridge-border);
+  border-radius: var(--radius-xl);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  height: 600px;
+  overflow: visible;
+  position: relative;
+}
+
+/* ── Fridge sections ── */
+.fridge-section {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--radius);
+  overflow: visible;
+}
+
+.fridge-section.freezer {
+  flex: 0 0 160px;
+  border-bottom: 3px solid var(--fridge-border);
+}
+
+.fridge-section.main {
+  flex: 1;
+}
+
+.fridge-contents {
+  width: 100%;
+  height: 100%;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Door — sits as sibling to fridge-contents inside fridge-section ── */
+.door-scene {
+  position: absolute;
+  inset: 0;
+  perspective: 1200px;
+  perspective-origin: right center;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.door {
+  position: absolute;
+  inset: 0;
+  transform-origin: right center;
+  transform: rotateY(0deg);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+  cursor: pointer;
+  pointer-events: all;
+  overflow: visible;
+}
+
+
+/* Front face of door */
+.door-front {
+  position: absolute;
+  inset: 0;
+  background: var(--fridge-bg);
+  border: 1.5px solid var(--fridge-border);
+  border-radius: var(--radius);
+  backface-visibility: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.door-handle {
+  width: 6px;
+  height: 60px;
+  background: var(--fridge-border);
+  border-radius: 3px;
+  margin-left: 14px;
+  flex-shrink: 0;
+}
+
+.fridge-section.freezer .door-handle {
+  height: 30px;
+}
+
+.door-hint {
+  position: absolute;
+  bottom: 10px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.04em;
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+
+.door.open .door-hint { opacity: 0; }
+
+/* Back face of door — inner trays */
+.door-back {
+  position: absolute;
+  inset: 0;
+  background: var(--cream-dark);
+  border: 1.5px solid var(--fridge-border);
+  border-radius: var(--radius);
+  /* rotated 180deg so it faces inward when closed, outward when open */
+  transform: rotateY(180deg);
+  backface-visibility: hidden;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.door-tray {
+  background: var(--shelf);
+  border: 1px solid var(--shelf-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  flex: 1;
+  font-size: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+
+.freezer-scene {
+  perspective: 700px;
+  perspective-origin: right center;
+}
+
+.fridge-scene {
+  perspective: 900px;
+  perspective-origin: right center;
+}
+
+.freezer-scene .door {
+  transform-origin: right center;
+}
+
+.freezer-scene .door.open {
+  transform: rotateY(180deg);
+}
+
+.fridge-scene .door {
+  transform-origin: right center;
+}
+
+.fridge-scene .door.open {
+  transform: rotateY(180deg);
+}
+/* ── Shelves ── */
+.shelf {
+  background: var(--shelf);
+  border: 1px solid var(--shelf-border);
+  border-radius: var(--radius);
+  padding: 10px 12px 14px;
+  position: relative;
+  flex: 1;
+}
+
+.drawers-row {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.drawer { flex: 1; }
+
+.shelf-label {
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.shelf-items { display: flex; flex-wrap: wrap; gap: 6px; min-height: 32px; }
+
+.shelf-bar {
+  position: absolute;
+  bottom: 0; left: 10px; right: 10px;
+  height: 3px;
+  background: var(--shelf-border);
+  border-radius: 2px 2px 0 0;
+}
+
+/* ── Ingredient chip ── */
+.ingredient-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--cream);
+  border: 1px solid var(--cream-darker);
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 12px;
+  color: var(--text);
+  cursor: grab;
+  user-select: none;
+  white-space: nowrap;
+  transition: border-color 0.15s, transform 0.1s, opacity 0.15s;
+}
+.ingredient-chip:hover {
+  border-color: var(--green);
+  transform: translateY(-1px);
+}
+.ingredient-chip.in-basket {
+  opacity: 0.4;
+  pointer-events: none;
+}
+.ingredient-chip.dragging-overlay {
+  cursor: grabbing;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  transform: scale(1.05) rotate(-1deg);
+}
+
+/* ── Basket ── */
+.basket-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.basket-title {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.basket-zone {
+  min-height: 120px;
+  border: 2px dashed var(--cream-darker);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 8px;
+  width: 400px;
+  transition: border-color 0.15s, background 0.15s;
+}
+.basket-zone.over {
+  border-color: var(--green);
+  background: var(--green-light);
+}
+
+.basket-empty {
+  width: 100%;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+  padding: 24px 0;
+}
+
+.basket-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--green-light);
+  border: 1px solid #b5d4be;
+  border-radius: 20px;
+  padding: 5px 10px 5px 8px;
+  font-size: 12px;
+  color: var(--green-dark);
+}
+.basket-chip-remove {
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--green);
+  line-height: 1;
+  transition: color 0.1s;
+}
+.basket-chip-remove:hover { color: var(--red); }
+
+/* ── Search button ── */
+.search-btn {
+  width: 400px;
+  padding: 14px;
+  background: var(--text);
+  color: var(--cream);
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.search-btn:hover:not(:disabled) { background: var(--green-dark); }
+.search-btn:active:not(:disabled) { transform: scale(0.99); }
+.search-btn:disabled {
+  background: var(--cream-darker);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+/* ── Recipe card ── */
+.recipe-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--cream-dark);
+  border: 1px solid var(--cream-darker);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+  animation: slideIn 0.2s ease;
+  width: 400px;
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.recipe-img {
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius);
+  object-fit: cover;
+  background: var(--cream-darker);
+  flex-shrink: 0;
+}
+
+.recipe-info { flex: 1; min-width: 0; }
+.recipe-name {
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  margin-bottom: 4px;
+}
+.recipe-meta {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+}
+
+.recipe-actions { display: flex; gap: 8px; }
+
+.action-btn {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  border: 1px solid var(--cream-darker);
+  background: var(--cream);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.15s;
+}
+.action-btn.save:hover { background: #fff8e1; border-color: var(--gold); }
+.action-btn.dismiss:hover { background: var(--red-light); border-color: #e8b4b0; }
+
+.recipe-card.saved-card {
+  opacity: 0.75;
+  background: var(--cream);
+}
+
+.saved-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.recipe-results, .saved-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
