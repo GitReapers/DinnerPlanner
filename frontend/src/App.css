@@ -64,7 +64,7 @@ body {
 .nav-link:hover { background: var(--cream-dark); color: var(--text); }
 .nav-link.active { background: var(--text); color: var(--cream); }
 
-/* ── Layout ── */
+/* Layout */
 .app-main {
   display: flex;
   gap: 32px;
@@ -96,7 +96,7 @@ body {
   align-items: flex-start;
 }
 
-/* ── Fridge wrapper — overflow visible so doors escape ── */
+/* Fridge wrapper — overflow visible so doors escape */
 .fridge-wrap {
   position: relative;
   width: 100%;
@@ -104,7 +104,7 @@ body {
   padding-right: 180px;
 }
 
-/* ── Fridge body — no overflow hidden ── */
+/* Fridge body — no overflow hidden */
 .fridge {
   width: 300px; 
   background: var(--fridge-bg);
@@ -119,7 +119,7 @@ body {
   position: relative;
 }
 
-/* ── Fridge sections ── */
+/* Fridge sections */
 .fridge-section {
   position: relative;
   display: flex;
@@ -146,7 +146,7 @@ body {
   gap: 6px;
 }
 
-/* ── Door — sits as sibling to fridge-contents inside fridge-section ── */
+/* Door — sits as sibling to fridge-contents inside fridge-section */
 .door-scene {
   position: absolute;
   inset: 0;
@@ -238,7 +238,14 @@ body {
   letter-spacing: 0.05em;
 }
 
-
+.chip-delete {
+  margin-left: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+.chip-delete:hover { color: var(--red); }
 .freezer-scene {
   perspective: 700px;
   perspective-origin: right center;
@@ -264,7 +271,50 @@ body {
 .fridge-scene .door.open {
   transform: rotateY(180deg);
 }
-/* ── Shelves ── */
+
+.fridge-section.freezer {
+  flex: 0 0 160px;  /* fixed height, won't grow or shrink */
+}
+
+.fridge-section.main {
+  flex: 0 0 400px;
+}
+
+.shelf {
+  flex: 0 0 80px;   /* fixed, never grows */
+  overflow: hidden;  /* clips chips if too many */
+}
+
+.drawers-row {
+  flex: 0 0 80px;   /* fixed */
+  overflow: hidden;
+}
+
+/* trashcan */
+.trash-can {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px dashed var(--cream-darker);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
+  cursor: default;
+  margin-top: 12px;
+}
+.trash-can.over {
+  border-color: var(--red);
+  background: var(--red-light);
+  transform: scale(1.1);
+}
+.trash-can.flash {
+  border-color: var(--red);
+  background: var(--red-light);
+  transform: scale(1.15);
+}
+/* shelves */
 .shelf {
   background: var(--shelf);
   border: 1px solid var(--shelf-border);
@@ -280,7 +330,9 @@ body {
   flex: 1;
 }
 
-.drawer { flex: 1; }
+.drawer { 
+  flex: 1; 
+}
 
 .shelf-label {
   font-size: 10px;
@@ -300,7 +352,7 @@ body {
   border-radius: 2px 2px 0 0;
 }
 
-/* ── Ingredient chip ── */
+/* Ingredient chip */
 .ingredient-chip {
   display: inline-flex;
   align-items: center;
@@ -330,7 +382,7 @@ body {
   transform: scale(1.05) rotate(-1deg);
 }
 
-/* ── Basket ── */
+/* Basket */
 .basket-wrap {
   display: flex;
   flex-direction: column;
@@ -389,7 +441,7 @@ body {
 }
 .basket-chip-remove:hover { color: var(--red); }
 
-/* ── Search button ── */
+/* Search button */
 .search-btn {
   width: 400px;
   padding: 14px;
@@ -411,7 +463,7 @@ body {
   cursor: default;
 }
 
-/* ── Recipe card ── */
+/* Recipe card */
 .recipe-card {
   display: flex;
   align-items: center;
