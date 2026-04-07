@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 import Fridge from './components/Fridge'
 import Basket from './components/Basket'
 import RecipeCard from './components/RecipeCard'
+import SavedRecipes from './components/SavedRecipes'
+import { getSavedRecipes, saveRecipe as saveRecipeService } from './services/savedRecipes'
 import './App.css'
 
 const MOCK_RECIPES = [
@@ -66,10 +68,24 @@ export default function App() {
   const [recipes, setRecipes] = useState([])
   const [savedRecipes, setSavedRecipes] = useState([])
   const [loading, setLoading] = useState(false)
+  const [currentView, setCurrentView] = useState('ingredients') // New: For navigation
 
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: { distance: 5 },
   }))
+
+  // New: Load saved recipes from localStorage on app start
+  useEffect(() => {
+    const loadSaved = async () => {
+      try {
+        const saved = await getSavedRecipes()
+        setSavedRecipes(saved)
+      } catch (error) {
+        console.error('Error loading saved recipes:', error)
+      }
+    }
+    loadSaved()
+  }, [])
 
   function findZone(itemId) {
     return Object.keys(shelves).find(key => shelves[key].some(i => i.id === itemId))
@@ -154,8 +170,18 @@ export default function App() {
     setTimeout(() => { setRecipes(MOCK_RECIPES); setLoading(false) }, 800)
   }
 
-  function saveRecipe(recipe) {
-    if (!savedRecipes.find(r => r.id === recipe.id)) setSavedRecipes(prev => [...prev, recipe])
+  // Updated: Now async and uses service for persistence
+  async function saveRecipe(recipe) {
+    if (!savedRecipes.find(r => r.id === recipe.id)) {
+      const newSaved = [...savedRecipes, recipe]
+      setSavedRecipes(newSaved)
+      try {
+        await saveRecipeService(recipe)
+      } catch (error) {
+        console.error('Error saving recipe:', error)
+        // Optionally revert state on error
+      }
+    }
     setRecipes(prev => prev.filter(r => r.id !== recipe.id))
   }
 
@@ -175,37 +201,53 @@ export default function App() {
           <header className="app-header">
             <span className="app-logo">DinnerDrop</span>
             <nav className="app-nav">
-              <button className="nav-link active">Get Ingredients</button>
-              <button className="nav-link">Saved Recipes</button>
+              <button
+                className={`nav-link ${currentView === 'ingredients' ? 'active' : ''}`}
+                onClick={() => setCurrentView('ingredients')}
+              >
+                Get Ingredients
+              </button>
+              <button
+                className={`nav-link ${currentView === 'saved' ? 'active' : ''}`}
+                onClick={() => setCurrentView('saved')}
+              >
+                Saved Recipes
+              </button>
             </nav>
           </header>
 
-          <main className="app-main">
-            <section className="left-panel">
-              <Fridge basket={basket} shelves={shelves} onDelete={deleteFromFridge} />
-            </section>
+          {currentView === 'ingredients' ? (
+            <main className="app-main">
+              <section className="left-panel">
+                <Fridge basket={basket} shelves={shelves} onDelete={deleteFromFridge} />
+              </section>
 
-            <section className="right-panel">
-              <Basket items={basket} onRemove={removeFromBasket} onSearch={handleSearch} loading={loading} />
+              <section className="right-panel">
+                <Basket items={basket} onRemove={removeFromBasket} onSearch={handleSearch} loading={loading} />
 
-              {recipes.length > 0 && (
-                <div className="recipe-results">
-                  {recipes.map(recipe => (
-                    <RecipeCard key={recipe.id} recipe={recipe} onSave={saveRecipe} onDismiss={dismissRecipe} />
-                  ))}
-                </div>
-              )}
+                {recipes.length > 0 && (
+                  <div className="recipe-results">
+                    {recipes.map(recipe => (
+                      <RecipeCard key={recipe.id} recipe={recipe} onSave={saveRecipe} onDismiss={dismissRecipe} />
+                    ))}
+                  </div>
+                )}
 
-              {savedRecipes.length > 0 && (
-                <div className="saved-section">
-                  <p className="saved-label">Saved</p>
-                  {savedRecipes.map(recipe => (
-                    <RecipeCard key={recipe.id} recipe={recipe} saved />
-                  ))}
-                </div>
-              )}
-            </section>
-          </main>
+                {savedRecipes.length > 0 && (
+                  <div className="saved-section">
+                    <p className="saved-label">Saved</p>
+                    {savedRecipes.map(recipe => (
+                      <RecipeCard key={recipe.id} recipe={recipe} saved />
+                    ))}
+                  </div>
+                )}
+              </section>
+            </main>
+          ) : (
+            <main className="app-main">
+              <SavedRecipes onBack={() => setCurrentView('ingredients')} />
+            </main>
+          )}
         </div>
 
         <DragOverlay>
