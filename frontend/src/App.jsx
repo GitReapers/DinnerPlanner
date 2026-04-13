@@ -1,10 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
+import { supabase } from './lib/supabase'
+import { signOut } from './lib/auth'
 import Fridge from './components/Fridge'
 import Basket from './components/Basket'
 import RecipeCard from './components/RecipeCard'
+import Auth from './components/Auth'
 import './App.css'
+
+
 
 const MOCK_RECIPES = [
   { id: 1, title: 'Tomato Pasta', image: 'https://placehold.co/80x80/e8d5c4/7a5c44?text=🍝', totalIngredients: 6, totalTime: 25 },
@@ -60,12 +65,33 @@ const TRAY_MAX = 3
 const SHELF_MAX = 6
 
 export default function App() {
+  const [user, setUser] = useState(null)
+
   const [shelves, setShelves] = useState(INITIAL_SHELVES)
   const [basket, setBasket] = useState([])
   const [activeItem, setActiveItem] = useState(null)
   const [recipes, setRecipes] = useState([])
   const [savedRecipes, setSavedRecipes] = useState([])
   const [loading, setLoading] = useState(false)
+  const [loadingUser, setLoadingUser] = useState(true)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null)
+      setLoadingUser(false)
+    })
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null)
+        setLoadingUser(false)
+      }
+    )
+
+    return () => {
+      listener?.subscription?.unsubscribe()
+    }
+  }, [])
 
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: { distance: 5 },
@@ -163,6 +189,14 @@ export default function App() {
     setRecipes(prev => prev.filter(r => r.id !== id))
   }
 
+  if (loadingUser) {
+    return <div>Loading...</div>
+  }
+
+  if (!user) {
+    return <Auth />
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -178,6 +212,9 @@ export default function App() {
               <button className="nav-link active">Get Ingredients</button>
               <button className="nav-link">Saved Recipes</button>
             </nav>
+            <button onClick={signOut} className="logout-btn">
+              Logout
+            </button>
           </header>
 
           <main className="app-main">
