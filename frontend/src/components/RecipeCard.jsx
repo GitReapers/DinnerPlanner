@@ -1,37 +1,42 @@
-export default function RecipeCard({ recipe, onSave, onDismiss, saved }) {
-  return (
-    <div className={`recipe-card ${saved ? 'saved-card' : ''}`}>
-    <img
-        className="recipe-img"
-        src={recipe.image}
-        alt={recipe.title}
-    />
+export default function RecipeCard({ recipe, onSave, onDismiss, onExpand, saved }) {
+    return (
+        <div className={`recipe-card ${saved ? 'saved-card' : ''}`}
+            onDoubleClick={() => onExpand?.(recipe.recipeApiId)}  // double click on card to get details
+        >
+            <img
+                className="recipe-img"
+                src={recipe.imageUrl}
+                alt={recipe.title}
+            />
 
-        <div className="recipe-info">
-            <div className="recipe-name">{recipe.title}</div>
-            <div className="recipe-meta">
-            Total Ingredients: {recipe.totalIngredients} &nbsp;·&nbsp; Total time: {recipe.totalTime} min
-            </div>
+            <div className="recipe-info">
+                <div className="recipe-name">{recipe.title}</div>
+                {recipe.usedIngredients.length > 0 &&
+                    <div className="recipe-meta">
+                        Used: {recipe.usedIngredients.length} &nbsp;·&nbsp; Missing:{" "}
+                        {recipe.missedIngredients.length}
+                    </div>
+                }
 
-            {!saved && (
-            <div className="recipe-actions">
-                <button
-                className="action-btn save"
-                title="Save recipe"
-                onClick={() => onSave(recipe)}
-                >
-                ★
-                </button>
-                <button
-                className="action-btn dismiss"
-                title="Dismiss"
-                onClick={() => onDismiss(recipe.id)}
-                >
-                ✕
-                </button>
+                {!saved && (
+                    <div className="recipe-actions">
+                        <button
+                            className="action-btn save"
+                            title="Save recipe"
+                            onClick={() => onSave(recipe)}
+                        >
+                            ★
+                        </button>
+                        <button
+                            className="action-btn dismiss"
+                            title="Dismiss"
+                            onClick={() => onDismiss(recipe.recipeApiId)}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                )}
             </div>
-            )}
         </div>
-    </div>
-)
+    )
 }

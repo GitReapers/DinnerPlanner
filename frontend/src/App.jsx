@@ -1,20 +1,17 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { DndContext, DragOverlay, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
-import { supabase } from './lib/supabase'
 import { signOut } from './lib/auth'
+import { useRecipes } from './hooks/useRecipes'
+import { useSavedRecipes } from './hooks/useSavedRecipes'
+import { useAuth } from './hooks/useAuth'
+import { useRecipeDetail } from './hooks/useRecipeDetail'
 import Fridge from './components/Fridge'
 import Basket from './components/Basket'
 import RecipeCard from './components/RecipeCard'
+import RecipeDetail from './components/RecipeDetail'
 import Auth from './components/Auth'
 import './App.css'
-
-
-
-const MOCK_RECIPES = [
-  { id: 1, title: 'Tomato Pasta', image: 'https://placehold.co/80x80/e8d5c4/7a5c44?text=🍝', totalIngredients: 6, totalTime: 25 },
-  { id: 2, title: 'Egg Fried Rice', image: 'https://placehold.co/80x80/d4e8c4/4a7a44?text=🍳', totalIngredients: 5, totalTime: 15 },
-]
 
 export const INITIAL_SHELVES = {
   freezer: [
@@ -65,33 +62,15 @@ const TRAY_MAX = 3
 const SHELF_MAX = 6
 
 export default function App() {
-  const [user, setUser] = useState(null)
+  const { user, loadingUser } = useAuth()
+  const { recipes, loading, error, search, dismiss } = useRecipes()
+  const { saved, save, remove, isSaved } = useSavedRecipes()
+  const { detail, loading: detailLoading, fetch: fetchDetail, clear: clearDetail } = useRecipeDetail()
 
+  const [view, setView] = useState('fridge') // 'fridge' | 'saved'
   const [shelves, setShelves] = useState(INITIAL_SHELVES)
   const [basket, setBasket] = useState([])
   const [activeItem, setActiveItem] = useState(null)
-  const [recipes, setRecipes] = useState([])
-  const [savedRecipes, setSavedRecipes] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [loadingUser, setLoadingUser] = useState(true)
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setUser(data.session?.user ?? null)
-      setLoadingUser(false)
-    })
-
-    const { data: listener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null)
-        setLoadingUser(false)
-      }
-    )
-
-    return () => {
-      listener?.subscription?.unsubscribe()
-    }
-  }, [])
 
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: { distance: 5 },
@@ -176,26 +155,12 @@ export default function App() {
 
   function handleSearch() {
     if (basket.length < 2) return
-    setLoading(true)
-    setTimeout(() => { setRecipes(MOCK_RECIPES); setLoading(false) }, 800)
+    const ingredientNames = basket.map(item => item.name)
+    search(ingredientNames)
   }
 
-  function saveRecipe(recipe) {
-    if (!savedRecipes.find(r => r.id === recipe.id)) setSavedRecipes(prev => [...prev, recipe])
-    setRecipes(prev => prev.filter(r => r.id !== recipe.id))
-  }
-
-  function dismissRecipe(id) {
-    setRecipes(prev => prev.filter(r => r.id !== id))
-  }
-
-  if (loadingUser) {
-    return <div>Loading...</div>
-  }
-
-  if (!user) {
-    return <Auth />
-  }
+  if (loadingUser) return <div className="loading-screen">Loading...</div>
+  if (!user) return <Auth />
 
   return (
     <DndContext
@@ -209,8 +174,8 @@ export default function App() {
           <header className="app-header">
             <span className="app-logo">DinnerDrop</span>
             <nav className="app-nav">
-              <button className="nav-link active">Get Ingredients</button>
-              <button className="nav-link">Saved Recipes</button>
+              <button className={`nav-link ${view === 'fridge' ? 'active' : ''}`} onClick={() => setView('fridge')}>Get Ingredients</button>
+              <button className={`nav-link ${view === 'saved' ? 'active' : ''}`} onClick={() => setView('saved')}>Saved Recipes {saved.length > 0 && <span className="nav-badge">{saved.length}</span>}</button>
             </nav>
             <button onClick={signOut} className="logout-btn">
               Logout
@@ -218,6 +183,9 @@ export default function App() {
           </header>
 
           <main className="app-main">
+
+            {view === 'fridge' && (
+            <>
             <section className="left-panel">
               <Fridge basket={basket} shelves={shelves} onDelete={deleteFromFridge} />
             </section>
@@ -225,24 +193,64 @@ export default function App() {
             <section className="right-panel">
               <Basket items={basket} onRemove={removeFromBasket} onSearch={handleSearch} loading={loading} />
 
+              {error && <p className="error-msg">{error}</p>}
+
               {recipes.length > 0 && (
                 <div className="recipe-results">
                   {recipes.map(recipe => (
-                    <RecipeCard key={recipe.id} recipe={recipe} onSave={saveRecipe} onDismiss={dismissRecipe} />
-                  ))}
-                </div>
-              )}
-
-              {savedRecipes.length > 0 && (
-                <div className="saved-section">
-                  <p className="saved-label">Saved</p>
-                  {savedRecipes.map(recipe => (
-                    <RecipeCard key={recipe.id} recipe={recipe} saved />
+                    <RecipeCard
+                      key={recipe.recipeApiId}
+                      recipe={recipe}
+                      onSave={save}
+                      onDismiss={dismiss}
+                      onExpand={fetchDetail}
+                      saved={isSaved(recipe.recipeApiId)}
+                    />
                   ))}
                 </div>
               )}
             </section>
+            </>
+            )}
+            {view === 'saved' && (
+            <section className="saved-view">
+              {saved.length === 0 ? (
+                <p className="empty-msg">No saved recipes yet. Find some ingredients and start cooking!</p>
+              ) : (
+                <div className="saved-grid">
+                  {saved.map(recipe => (
+          
+                    <RecipeCard
+                      key={recipe.recipe_api_id}
+                      recipe={{
+                        recipeApiId: recipe.recipe_api_id,
+                        title: recipe.title,
+                        imageUrl: recipe.image_url,
+                        usedIngredients: [],
+                        missedIngredients: [],
+                      }}
+                      saved
+                      onDismiss={remove}
+                      onExpand={fetchDetail}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
           </main>
+
+        {/* Recipe detail modal — triggered from either view */}
+        {detail && (
+          <RecipeDetail
+            recipe={detail}
+            loading={detailLoading}
+            onClose={clearDetail}
+            onSave={save}
+            onRemove={remove}
+            saved={isSaved(detail.recipeApiId)}
+          />
+        )}
         </div>
 
         <DragOverlay>
