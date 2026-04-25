@@ -1,7 +1,7 @@
 export default function RecipeCard({ recipe, onSave, onDismiss, onExpand, saved }) {
     return (
         <div className={`recipe-card ${saved ? 'saved-card' : ''}`}
-            onDoubleClick={() => onExpand?.(recipe.recipeApiId)}  // double click on card to get details
+            onClick={() => onExpand?.(recipe.recipeApiId)}
         >
             <img
                 className="recipe-img"
