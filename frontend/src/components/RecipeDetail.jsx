@@ -1,3 +1,21 @@
+import { useState } from 'react'
+function Summary({text}) {
+  const [expanded, setExpanded] = useState(false)
+  const words = text.split(' ')
+  const short = words.slice(0, 20).join(' ')
+  const isLong = words.length > 20
+return (
+  <p className="text-sm leading-relaxed" style={{ color: 'var(--text-muted)' }}>
+    {expanded || !isLong ? text : `${short}…`}
+      {isLong && (
+        <button 
+          onClick={()=>setExpanded(e=>!e)}>
+          {expanded ? 'see less' : 'see more'}
+        </button>
+      )}
+  </p>
+)}
+
 export default function RecipeDetail({ recipe, loading, onClose, onSave, onRemove, saved }) {
   return (
     <div
@@ -60,10 +78,41 @@ export default function RecipeDetail({ recipe, loading, onClose, onSave, onRemov
                   className="text-sm leading-relaxed"
                   style={{ color: 'var(--text-muted)' }}
                 >
-                  {recipe.summary}
+                  {recipe.summary && <Summary text={recipe.summary} />}
                 </p>
               )}
 
+               {recipe.extendedIngredients?.length > 0 && (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Ingredients</p>
+                    <ul className="flex flex-col gap-1">
+                      {recipe.extendedIngredients.map((ing, i) => (
+                        <li key={i} className="text-sm flex gap-2" style={{ color: 'var(--text-muted)' }}>
+                          <span>·</span>
+                          <span>{ing.amount} {ing.unit} {ing.name}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {recipe.analyzedInstructions?.length > 0 && (
+                  <div className="flex flex-col gap-3">
+                  <p className="text-sm font-medium" style={{ color: 'var(--text)' }}>Instructions</p>
+                  <ol className="flex flex-col gap-3">
+                    {recipe.analyzedInstructions[0].steps.map(step => (
+                      <li key={step.number} className="flex gap-3 text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <span
+                          className="flex-shrink-0 flex items-center justify-center w-6 h-6 rounded-full text-xs font-medium"
+                          style={{ background: 'var(--cream-darker)', color: 'var(--text)', marginTop: 1 }}
+                        >
+                          {step.number}
+                        </span>
+                        <span style={{ lineHeight: 1.6 }}>{step.step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+                )}
               {/* Action buttons */}
               <div className="flex gap-3 pt-1">
                 <button
@@ -77,7 +126,7 @@ export default function RecipeDetail({ recipe, loading, onClose, onSave, onRemov
                   {saved ? 'Unsave' : 'Save Recipe'}
                 </button>
 
-                {recipe.sourceUrl && (
+                {/* {recipe.sourceUrl && (
                   <a
                     href={recipe.sourceUrl}
                     target="_blank"
@@ -90,7 +139,9 @@ export default function RecipeDetail({ recipe, loading, onClose, onSave, onRemov
                   >
                     View Full Recipe
                   </a>
-                )}
+                )} */}
+               
+                
               </div>
             </div>
           </>

@@ -4,8 +4,15 @@ export const createRecipe = (raw) => ({
   imageUrl: raw.image,
   sourceUrl: raw.sourceUrl ?? raw.spoonacularSourceUrl ?? null,
   summary: raw.summary?.replace(/<[^>]+>/g, "") ?? "",
+  readyInMinutes: raw.readyInMinutes ?? null,                    
+  analyzedInstructions: raw.analyzedInstructions ?? [],
   usedIngredients: raw.usedIngredients?.map((i) => i.name) ?? [],
-  missedIngredients: raw.missedIngredients?.map((i) => i.name) ?? []
+  missedIngredients: raw.missedIngredients?.map((i) => i.name) ?? [],
+  extendedIngredients: raw.extendedIngredients?.map(i => ({
+    name: i.name,
+    amount: i.amount,
+    unit: i.unit,
+  })) ?? [],
 });
 
 // columns expected by the recipes db table
