@@ -9,6 +9,7 @@ import { useRecipeDetail } from './hooks/useRecipeDetail'
 import Fridge from './components/Fridge'
 import Basket from './components/Basket'
 import RecipeCard from './components/RecipeCard'
+import RecipeStack from './components/RecipeStack'
 import RecipeDetail from './components/RecipeDetail'
 import Auth from './components/Auth'
 import './App.css'
@@ -171,13 +172,26 @@ export default function App() {
     >
       <div>
         <div className="app-layout">
-          <header className="app-header">
-            <span className="app-logo">DinnerDrop</span>
-            <nav className="app-nav">
+          <header className="flex items-center justify-between h-14 border-b" style={{ background: 'var(--cream)', borderColor: 'var(--cream-darker)', padding: '0 3rem' }}>
+            <span className="text-3xl font-medium tracking-tight" style={{ color: 'var(--text)' }}>DinnerDrop</span>
+            <nav className="flex gap-1">
               <button className={`nav-link ${view === 'fridge' ? 'active' : ''}`} onClick={() => setView('fridge')}>Get Ingredients</button>
-              <button className={`nav-link ${view === 'saved' ? 'active' : ''}`} onClick={() => setView('saved')}>Saved Recipes {saved.length > 0 && <span className="nav-badge">{saved.length}</span>}</button>
+              <button className={`nav-link ${view === 'saved' ? 'active' : ''}`} onClick={() => setView('saved')}>
+                Saved Recipes
+                {saved.length > 0 && (
+                  <span className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[10px] font-medium" style={{ background: 'var(--green)', color: 'var(--cream)', marginLeft: '0.5rem' }}>
+                    {saved.length}
+                  </span>
+                )}
+              </button>
             </nav>
-            <button onClick={signOut} className="logout-btn">
+            <button
+              onClick={signOut}
+              className="text-sm transition-colors"
+              style={{ color: 'var(--text-muted)', background: 'none', border: 'none', cursor: 'pointer' }}
+              onMouseEnter={e => e.target.style.color = 'var(--text)'}
+              onMouseLeave={e => e.target.style.color = 'var(--text-muted)'}
+            >
               Logout
             </button>
           </header>
@@ -196,18 +210,14 @@ export default function App() {
               {error && <p className="error-msg">{error}</p>}
 
               {recipes.length > 0 && (
-                <div className="recipe-results">
-                  {recipes.map(recipe => (
-                    <RecipeCard
-                      key={recipe.recipeApiId}
-                      recipe={recipe}
-                      onSave={save}
-                      onDismiss={dismiss}
-                      onExpand={fetchDetail}
-                      saved={isSaved(recipe.recipeApiId)}
-                    />
-                  ))}
-                </div>
+                <RecipeStack
+                  key={recipes[0]?.recipeApiId}
+                  recipes={recipes}
+                  onSave={save}
+                  onDismiss={dismiss}
+                  onExpand={fetchDetail}
+                  isSaved={isSaved}
+                />
               )}
             </section>
             </>

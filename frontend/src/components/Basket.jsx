@@ -5,7 +5,7 @@ export default function Basket({ items, onRemove, onSearch, loading }) {
 
     return (
         <div className="basket-wrap">
-        <p className="basket-title">Dinner basket</p>
+        <p className="basket-title">Dinner Basket</p>
 
         <div
             ref={setNodeRef}
